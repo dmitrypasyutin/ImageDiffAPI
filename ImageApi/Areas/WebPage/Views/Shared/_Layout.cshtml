@@ -1,0 +1,17 @@
+﻿
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewData["Title"]</title>
+</head>
+<body>
+<script src="~/lib/jquery/jquery.js"></script>
+    <p>
+        @Html.ActionLink("Sync", "Sync", "WebPage")
+        @Html.ActionLink("Async", "Async", "WebPage")
+    </p>
+    @RenderBody()
+</body>
+</html>

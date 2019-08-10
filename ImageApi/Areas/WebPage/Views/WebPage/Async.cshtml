@@ -1,0 +1,99 @@
+﻿@{
+    ViewData["Title"] = "Async analyze";
+}
+
+<script>
+    var currentPercent = 0;
+    var currentImageVersion = 0;
+    var timer;
+    var timerCount = 0;
+
+    $(document).ready(function() {
+        $('#btnUpload').on('click',
+            function() {
+                var files = $('#fUpload').prop("files");
+                var fdata = new FormData();
+                for (var i = 0; i < files.length; i++) {
+                    fdata.append("files", files[i]);
+                }
+                if (files.length > 0) {
+                    $.ajax({
+                        type: "POST",
+                        url: "/api/compareasync",
+                        data: fdata,
+                        contentType: false,
+                        processData: false,
+                        success: function(response) {
+                            updateImage(response.imageId);
+                            updateLabel(response.percent);
+                            timer = setInterval(function() { checkImage(response.imageId); }, 1000);
+                        },
+                        error: function(textStatus, errorThrown) {
+                            $('#errorLbl').html(textStatus.responseJSON.errorMessage);
+                        }
+                    });
+                } else {
+                    alert('Please select files');
+                }
+            });
+
+        function checkImage(imageId) {
+            timerCount++;
+            $.ajax({
+                type: "GET",
+                url: "/api/imageprogress/" + imageId,
+                data: null,
+                contentType: false,
+                processData: false,
+                success: function(response) {
+                    if (response.percent > currentPercent) {
+                        currentPercent = response.percent;
+                        updateLabel(response.percent);
+                        checkTimer();
+                    }
+                    if(response.imageVersion > currentImageVersion){
+                        currentImageVersion = response.imageVersion;
+                        updateImage(response.imageId);
+                    }
+                }
+            });
+        }
+
+        function updateImage(imageId) {
+            $('#resultImg').removeAttr('src').attr('src',
+                '/api/image/' + imageId + "?d=" + new Date().getTime());
+        }
+        
+        function updateLabel(percent){
+            $('#percentLabel').html(percent + "% is processed");
+        }
+
+        function checkTimer() {
+            if (currentPercent === 100 || timerCount > 100) {
+                clearInterval(timer);
+            }
+        }
+    });
+
+    
+
+    
+</script>
+
+<form method="post" enctype="multipart/form-data"> 
+    <div>
+        <div>
+            <input type="file" id="fUpload" name="files" multiple />
+        </div>
+    </div>
+    <div>
+        <div style="padding-top:10px;">
+            <input type="button" id="btnUpload" value="Upload" />
+        </div>
+    </div>
+</form>
+
+<label>Result:</label><br/>
+<img id="resultImg"/><br/>
+<label id="percentLabel"></label><br/>
+<label id="errorLbl"></label>
