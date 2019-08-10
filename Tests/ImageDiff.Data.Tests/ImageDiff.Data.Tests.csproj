@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ImageComparer.Data\ImageDiff.Data.csproj" />
+    <ProjectReference Include="..\..\ImageComparer.Data\ImageDiff.Data.csproj" />
   </ItemGroup>
 
 </Project>

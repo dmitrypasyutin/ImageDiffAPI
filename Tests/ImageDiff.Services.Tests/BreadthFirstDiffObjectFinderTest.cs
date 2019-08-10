@@ -4,7 +4,6 @@ using ImageDiff.CommonAbstractions;
 using ImageDiff.Data;
 using ImageDiff.Services.DiffObjectFinders;
 using Moq;
-using NSubstitute;
 using NUnit.Framework;
 
 namespace ImageDiff.Services.Tests

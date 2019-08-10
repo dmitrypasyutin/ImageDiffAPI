@@ -14,8 +14,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\ImageApi\ImageDiff.Api.csproj" />
-    <ProjectReference Include="..\ImageComparer.Common\ImageDiff.CommonAbstractions.csproj" />
+    <ProjectReference Include="..\..\ImageApi\ImageDiff.Api.csproj" />
+    <ProjectReference Include="..\..\ImageComparer.Common\ImageDiff.CommonAbstractions.csproj" />
   </ItemGroup>
 
   <ItemGroup>

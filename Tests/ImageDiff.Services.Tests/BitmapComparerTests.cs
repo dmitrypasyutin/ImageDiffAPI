@@ -37,6 +37,5 @@ namespace ImageDiff.Services.Tests
             Assert.IsTrue(comparer.PixelsEqual(_image1, _image2, new ImagePixel(0, 0)));
             Assert.IsFalse(comparer.PixelsEqual(_image1, _image2, new ImagePixel(2, 2)));
         }
-
     }
 }
