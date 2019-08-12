@@ -43,20 +43,13 @@ namespace ImageDiff.Api.Controllers
         [ResponseCache(Duration = 3600, Location = ResponseCacheLocation.None)]
         public IActionResult GetImage(int imageId)
         {
-            try
+            var image = _imageStorage.Get(imageId);
+            if (image == null)
             {
-                var image = _imageStorage.Get(imageId);
-                if (image == null)
-                {
-                    return NotFound();
-                }
+                return NotFound();
+            }
 
-                return File(image.ImageData, image.ContentType);
-            }
-            catch (Exception)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError);
-            }
+            return File(image.ImageData, image.ContentType);
         }
 
         [HttpGet("imageprogress/{imageId:int}")]
@@ -66,24 +59,17 @@ namespace ImageDiff.Api.Controllers
         public ActionResult<ImageProgressResponse> GetImageProgress(int imageId)
         {
             ImageProgressResponse response = new ImageProgressResponse();
-
-            try
+            
+            var resultImage = _imageStorage.Get(imageId);
+            if (resultImage == null)
             {
-                var resultImage = _imageStorage.Get(imageId);
-                if (resultImage == null)
-                {
-                    response.HttpStatusCode = HttpStatusCode.NotFound;
-                }
-                else
-                {
-                    response.ImageId = resultImage.ImageId;
-                    response.Percent = resultImage.PercentsProcessed;
-                    response.ImageVersion = resultImage.ImageVersion;
-                }
+                response.HttpStatusCode = HttpStatusCode.NotFound;
             }
-            catch (Exception)
+            else
             {
-                response = CreateInternalServerErrorResponse(response);
+                response.ImageId = resultImage.ImageId;
+                response.Percent = resultImage.PercentsProcessed;
+                response.ImageVersion = resultImage.ImageVersion;
             }
 
             return response.ToHttpResponse();
@@ -96,33 +82,26 @@ namespace ImageDiff.Api.Controllers
         public ActionResult<ImageProgressResponse> CompareImagesSync(IFormFile[] files)
         {
             ImageProgressResponse response = new ImageProgressResponse();
+            
+            var requestValidationErrors = _requestValidator.ValidateFiles(files);
+            if (requestValidationErrors.Count > 0)
+                return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
+            
+            var originalImages = _formFileUtilities.ConvertFilesToImages(files);
 
-            try
-            {
-                var requestValidationErrors = _requestValidator.ValidateFiles(files);
-                if (requestValidationErrors.Count > 0)
-                    return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
-                
-                var originalImages = _formFileUtilities.ConvertFilesToImages(files);
+            requestValidationErrors = _requestValidator.ValidateImages(originalImages);
+            if (requestValidationErrors.Count > 0)
+                return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
 
-                requestValidationErrors = _requestValidator.ValidateImages(originalImages);
-                if (requestValidationErrors.Count > 0)
-                    return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
+            var foundDiffObjects = _objectsFinder.FindAllDiffObjects(originalImages[0], originalImages[1]).ToArray();
+            var resultImageData = _imageGenerator.DrawRectangles(_formFileUtilities.SerializeFile(files[0]), files[0].ContentType, foundDiffObjects);
 
-                var foundDiffObjects = _objectsFinder.FindAllDiffObjects(originalImages[0], originalImages[1]).ToArray();
-                var resultImageData = _imageGenerator.DrawRectangles(_formFileUtilities.SerializeFile(files[0]), files[0].ContentType, foundDiffObjects);
+            int newImageId = GenerateImageId();
 
-                int newImageId = GenerateImageId();
-
-                SaveResutlImageToStorage(new ResultImage(newImageId, resultImageData, 100, files[0].ContentType, 1));
-                
-                response.ImageId = newImageId;
-                response.Percent = 100;
-            }
-            catch (Exception)
-            {
-                response = CreateInternalServerErrorResponse(response);
-            }
+            SaveResutlImageToStorage(new ResultImage(newImageId, resultImageData, 100, files[0].ContentType, 1));
+            
+            response.ImageId = newImageId;
+            response.Percent = 100;
             return response.ToHttpResponse();
         }
 
@@ -134,32 +113,26 @@ namespace ImageDiff.Api.Controllers
         public ActionResult<ImageProgressResponse> CompareImagesAsync(IFormFile[] files)
         {
             ImageProgressResponse response = new ImageProgressResponse();
+            
+            var requestValidationErrors = _requestValidator.ValidateFiles(files);
+            if (requestValidationErrors.Count > 0)
+                return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
 
-            try
-            {
-                var requestValidationErrors = _requestValidator.ValidateFiles(files);
-                if (requestValidationErrors.Count > 0)
-                    return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
+            var originalImages = _formFileUtilities.ConvertFilesToImages(files);
 
-                var originalImages = _formFileUtilities.ConvertFilesToImages(files);
+            requestValidationErrors = _requestValidator.ValidateImages(originalImages);
+            if (requestValidationErrors.Count > 0)
+                return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
 
-                requestValidationErrors = _requestValidator.ValidateImages(originalImages);
-                if (requestValidationErrors.Count > 0)
-                    return CreateBadRequestResponse(response, requestValidationErrors).ToHttpResponse();
+            int newImageId = GenerateImageId();
 
-                int newImageId = GenerateImageId();
+            SaveResutlImageToStorage(new ResultImage(newImageId, _formFileUtilities.SerializeFile(files[0]), 0,
+                files[0].ContentType, 1));
 
-                SaveResutlImageToStorage(new ResultImage(newImageId, _formFileUtilities.SerializeFile(files[0]), 0,
-                    files[0].ContentType, 1));
+            response.ImageId = newImageId;
 
-                response.ImageId = newImageId;
+            FindObjectsAsync(originalImages, newImageId);
 
-                FindObjectsAsync(originalImages, newImageId);
-            }
-            catch (Exception)
-            {
-                response = CreateInternalServerErrorResponse(response);
-            }
             return response.ToHttpResponse();
         }
         
@@ -203,15 +176,6 @@ namespace ImageDiff.Api.Controllers
             
             response.ErrorMessage = string.Join(",", requestValidationErrors);
             response.HttpStatusCode = HttpStatusCode.BadRequest;
-            return response;
-        }
-
-        private ImageProgressResponse CreateInternalServerErrorResponse(ImageProgressResponse response)
-        {
-            if(response is null) throw new ArgumentException(nameof(response));
-            
-            response.HttpStatusCode = HttpStatusCode.InternalServerError;
-            response.ErrorMessage = "Internal server error";
             return response;
         }
     }

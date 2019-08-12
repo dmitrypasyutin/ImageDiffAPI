@@ -29,7 +29,7 @@
                             timer = setInterval(function() { checkImage(response.imageId); }, 1000);
                         },
                         error: function(textStatus, errorThrown) {
-                            $('#errorLbl').html(textStatus.responseJSON.errorMessage);
+                            $('#errorLbl').html("Internal server error");
                         }
                     });
                 } else {

@@ -24,7 +24,7 @@
                             $('#errorLbl').html('');
                         },
                         error: function(textStatus, errorThrown) {
-                            $('#errorLbl').html(textStatus.responseJSON.errorMessage);
+                            $('#errorLbl').html("Internal server error");
                         }
                     });
                 } else {

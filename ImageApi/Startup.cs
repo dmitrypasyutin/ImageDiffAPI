@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using ImageDiff.Api.Infrastructure;
+using ImageDiff.Api.Infrastructure.Extensions;
 using ImageDiff.Api.Infrastructure.Utilities;
 using ImageDiff.Api.Infrastructure.Utilities.Abstractions;
 using ImageDiff.Api.Infrastructure.Validators;
@@ -54,6 +55,8 @@ namespace ImageDiff.Api
                 app.UseDeveloperExceptionPage();
             }
 
+            app.ConfigureExceptionHandler();
+            
             app.UseMvc(routes =>
             {
                 routes.MapAreaRoute(
