@@ -9,7 +9,7 @@ namespace ImageDiff.Services.Tests
         [Test]
         public void Equal_True_When_Colors_Are_Same()
         {
-            var comparer = new ARGBPixelComparer();
+            var comparer = new ARGBPixelComparer(0);
             Assert.IsTrue(comparer.Equal(Color.White, Color.White));
             Assert.IsFalse(comparer.Equal(Color.White, Color.Black));
         }

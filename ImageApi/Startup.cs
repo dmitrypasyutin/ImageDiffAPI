@@ -35,7 +35,7 @@ namespace ImageDiff.Api
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
-            services.AddScoped(typeof(IPixelComparer), typeof(ARGBPixelComparer));
+            services.AddScoped<IPixelComparer>(f => new ARGBPixelComparer(40));
             services.AddScoped(typeof(IBitmapComparer), typeof(BitmapComparer));
             services.AddScoped(typeof(IDiffObjectsFinder), typeof(BreadthFirstDiffObjectsFinder));
             services.AddScoped(typeof(IStorage<,>), typeof(MemoryCacheStorage<,>));

@@ -43,6 +43,10 @@ namespace ImageDiff.Services.DiffObjectFinders
                         {
                             _imagePixelsStatus[yCoord, xCoord] = _foundObjectLabel;
                             yield return GetObjectRectangle(currentCoordinate);
+
+                            if (_foundObjectLabel == byte.MaxValue)
+                                break;
+                            
                             _foundObjectLabel++;
                         }
                     }
