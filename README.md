@@ -37,7 +37,6 @@ Platform: Web API .NET Core 2.2
 3. To save web traffic, the response may contain only coordinates of the rectangles of the found object. In that case, the client should be responsible for presenting final result. This approach is appropriate when API is supposed to process very large images.
 4. Instead of using memory cache, disk drive could be used to store the resulting images
 5. JPEG images may contain compression artifacts that surround objects on the image. Current algorithm detects those artifacts, thus spoiling the results. Parameterizing the algorithm to neglect those artifacts by excluding small found objects, may improve the final result.
-6. Exception handling should be implemented via Exception filter rather than try catch blocks
 
 
 
